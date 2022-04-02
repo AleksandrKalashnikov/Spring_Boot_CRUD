@@ -1,42 +1,47 @@
 package com.mykata.spring_boot_crud.dao;
 
 import com.mykata.spring_boot_crud.model.User;
-import com.mykata.spring_boot_crud.repository.UserRepository;
 import org.springframework.stereotype.Repository;
-
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 import java.util.List;
 
 @Repository
 public class UserDaoImpl implements UserDao {
 
-    private UserRepository userRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Override
     public List<User> allUsers() {
-        return userRepository.findAll();
+        TypedQuery<User> query = entityManager.createQuery("SELECT u FROM User u", User.class);
+        return query.getResultList();
     }
 
     @Override
     public User oneUser(long id) {
-        return userRepository.getById(id);
+        TypedQuery<User> query = entityManager.createQuery("SELECT u FROM User u WHERE u.id = :id", User.class);
+        query.setParameter("id", id);
+        return query.getSingleResult();
     }
 
     @Override
     public void saveUser(User user) {
-        userRepository.save(user);
+        entityManager.persist(user);
     }
 
     @Override
     public void updateUser(long id, User updateUser) {
-        User oldUser = userRepository.getById(id);
+        User oldUser = entityManager.find(User.class, updateUser.getId());
         oldUser.setName(updateUser.getName());
         oldUser.setLastname(updateUser.getLastname());
         oldUser.setAge(updateUser.getAge());
-        userRepository.save(updateUser);
     }
 
     @Override
     public void deleteUser(long id) {
-        userRepository.deleteById(id);
+        User oldUser = entityManager.find(User.class, id);
+        entityManager.remove(oldUser);
     }
 }
